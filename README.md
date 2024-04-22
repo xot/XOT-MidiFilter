@@ -15,7 +15,7 @@ XOT-MidiFilter uses user supplied expressions to transform incoming MIDI notes, 
 
 It can be used to shift notes, adjust note velocities, delay notes, create rhythmic patterns, process incoming chords as an arpeggiator, and much much more. The use of complex expressions allow these things to depend on the current state, on random events, and the value of three dials.
 
-Incoming notes are stored in a chord. A node is added with a note on message, and removed with a note off message. When a node is added, its velocity is also recorded. XOT-MidiFilter can use the current chord in the expressions that generate its output by referring to `N[i]` for the i-th note, `V[i]` for the velocity of the i-th note, for i between 0 and `L`-1 (i.e. 'L' denotes the number of notes in the current chord). Notes in a chord are always stored in increasing note pitch, i.e. `N[i]` is guaranteed to be smaller than `N[j]` when `i` < `j`.
+Incoming notes are stored in a chord. A node is added with a note on message, and removed with a note off message. When a node is added, its velocity is also recorded. XOT-MidiFilter can use the current chord in the expressions that generate its output by referring to `N[i]` for the i-th note, `V[i]` for the velocity of the i-th note, for i between 0 and `L`-1 (i.e. `L` denotes the number of notes in the current chord). Notes in a chord are always stored in increasing note pitch, i.e. `N[i]` is guaranteed to be smaller than `N[j]` when `i` < `j`.
 
 XOT-MidiFilter is triggered to produce output with every clock tick. This tick is either derived from the running transport (when 'Sync' equals 1/4, 1/8 or 1/16) or triggered with each incoming note on (when 'Sync' equals 'in'). When 'Triplets' is on, the clock is synchronised on triples of the selected rate. Using 'Sync' equals 'in', the clock can be given a groove.
 
@@ -27,8 +27,9 @@ With every tick the following happens:
 3. A loop over all notes in the current chord is started, setting an index
    `i` through values `0` to `L`-1 one by one, and performing the following steps. If the current chord is empty, the steps below are executed once, for `i` equals 0.
    
-   a. The gate expression is executed, and if it returns `false`, no output is produced. (Recall that `t` can be used in this expression for the current clock tick number, while `i` can be used to refer to the index of the current note in the current chord.)
-   b. Otherwise, a note is output with pitch defined by the note expression, velocity defined by the velocity expression, length defined by the length expression and delayed as defined by the delay expression.
+   - The gate expression is executed, and if it returns `false`, no output is produced. (Recall that `t` can be used in this expression for the current clock tick number, while `i` can be used to refer to the index of the current note in the current chord.)
+   
+   - Otherwise, a note is output with pitch defined by the note expression, velocity defined by the velocity expression, length defined by the length expression and delayed as defined by the delay expression.
    
 4. The current tick count is incremented by 1.
 5. The current state `S` is set to the next state `NS` computed earlier.
