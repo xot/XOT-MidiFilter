@@ -121,10 +121,6 @@ function list(note,velocity)
         end
 	L=L-1        
     end
-    print('length: ',L)
-    for j=0,L-1 do
-        print(N[j],' ; ',V[j])
-    end
 end
 
 function tick(x)
@@ -135,7 +131,7 @@ function tick(x)
 	local lf = loadstring("return " .. lengthscript)
 	local df = loadstring("return " .. delayscript)
 	NS = sf()
-	for j=0,L-1 do
+	for j=0,math.max(0,L-1) do
 		i = j
 		if gf() then 
 			delay = df()
