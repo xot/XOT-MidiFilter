@@ -70,7 +70,7 @@ In the function definitions the following variables can be used.
 
 Moreover, the following helper functions are available.
 
-- `e(n,k,r,i)`: the euclid generatior for n slots, k pulses, with rotation r, returning whether the slot at index i has a pulse or not (boolean). (*Note: the [algorithm used](https://paulbatchelor.github.io/sndkit/euclid/) is a simplified one-line version of the original recursive algorithm, that produces the same pattern but with a fixed but seemingly random rotation; adjust the rotation to get the actual Euclidean pattern.) 
+- `e(n,k,r,i)`: the euclid generatior for n slots, k pulses, with rotation r, returning whether the slot at index i has a pulse or not (boolean). (*Note: the [algorithm used](https://paulbatchelor.github.io/sndkit/euclid/) is a simplified one-line version of the original recursive algorithm, that produces the same pattern but with a fixed but seemingly random rotation; adjust the rotation to get the actual Euclidean pattern.*) 
 - `b(v)`: convert a boolean v to 0 (false) or 1 (true).
 - `r()`: return a uniform random value between 0..100.
 - `div(n,d)`: the integer division of n by d.
