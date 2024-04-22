@@ -83,14 +83,19 @@ When 'Through' equals 'On', all incoming MIDI events are passed through. When 'O
 
 Gate
 : `true`; produce output on every tick for every note in the chord.
+
 Note
 : `N[i]`; output each note in the chord.
+
 Velocity
 : `V[i]+20*(t%3)`; add 0, 20 or 40 to the velocity depending on the tick
+
 Length
 : `500`; note length is 500 ms.
+
 Delay
 : `0`; no delay.
+
 State
 : `0`; not used.
 
@@ -100,14 +105,19 @@ Sync could be set to 1/8.
 
 Gate
 : `i==0`; produce output on every tick, *once* for the chord.
+
 Note
 : `N[t % L]`; output each note in the chord one by one each tick
+
 Velocity
 : `V[t % L]`; use the note velocity
+
 Length
 : `500`; note length is 500 ms.
+
 Delay
 : `0`; no delay.
+
 State
 : `0`; not used.
 
@@ -117,14 +127,19 @@ Sync could be set to 1/8.
 
 Gate
 : `e(5,3,0,t)`; 3 pulses in 5 slots; observe how `t` is used to loop over the slots in succession, opening the gate and producing output for all t for which `e(5,3,0,t)` equals true. We could also have written `e(5,3,0,t%5)`
+
 Note
 : `50`; output note 50 (i.e. D3).
+
 Velocity
 : `10+30*(t%3)`; let the velocity vary with each tick: 10, 40, 70, 10, 40, 70, etc.
+
 Length
 : `50`; note length is 50 ms.
+
 Delay
 : `r()/20`; add a random delay between 0..50 ms.
+
 State
 : `0`; not used.
 
