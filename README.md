@@ -18,16 +18,14 @@ It can be used to shift notes, adjust note velocities, delay notes, create rhyth
 XOT-MidiFilter is triggered to produce output with every clock tick. This tick is either derived from the running transport (when 'Sync' equals 1/4, 1/8 or 1/16) or triggered with each incoming note on (when 'Sync' equals 'in'). When 'Triplets' is on, the clock is synchronised on triples of the selected rate. 
 
 
-When setting 'Sync' to 'filter' or 'in', an incoming note-ons (i.e. velocity > 0) is immediately processed. In the expressions generating the output (see below), `N[0]` equals the note, `V[0]` its velocity, and `L=0`. 
-
-When 'Sync' is 'in', the length of the note is determined by the length expression. This allows the generation of rhythmic patterns with a grove driven by notes on a MIDI track. When 'Sync' is 'filter', the length of the note is determined by the corresponding note-off message. This turns XOT-MidiFilter to a proper MIDI filter.
+When setting 'Sync' to 'in', an incoming note-ons (i.e. velocity > 0) is immediately processed. In the expressions generating the output (see below), `N[0]` equals the note, `V[0]` its velocity, and `L=1`. This setting allows the generation of rhythmic patterns with a grove driven by notes on a MIDI track. 
 
 When 'Sync' is equal to 1/4, 1/8 or 1/16 (i.e. when XOT-MidiFilter is synced to the transport), incoming notes are stored in a chord. A node is added with a note on message, and removed with a note off message. When a node is added, its velocity is also recorded. XOT-MidiFilter can use the current chord in the expressions that generate its output by referring to `N[i]` for the i-th note, `V[i]` for the velocity of the i-th note, for i between 0 and `L`-1 (i.e. `L` denotes the number of notes in the current chord). Notes in a chord are always stored in increasing note pitch, i.e. `N[i]` is guaranteed to be smaller than `N[j]` when `i` < `j`.
 
 With every tick the following happens:
 
 1. All expressions are read from the input.
-2. The next state `NS` is computed using the state expression.
+2. The next state `NS` is computed using the state expression. (If 'Sync' is 'in' this only happens the first after a note off message was received; this allows chords to share a single state.)
 3. A loop over all notes in the current chord is started, setting an index
    `i` through values `0` to `L`-1 one by one, and performing the following steps. If the current chord is empty (or when 'Sync' equals 'in'), the steps below are executed once, for `i` equals 0.
    
@@ -35,10 +33,10 @@ With every tick the following happens:
    
    - Otherwise, a note is output with pitch defined by the note expression, velocity defined by the velocity expression, length defined by the length expression and delayed as defined by the delay expression.
    
+   - If the length expression returns 0, then the corresponding note off message is used to turn the note off; this only works if 'Sync' equals 'in'. With this setting XOT-MidiFilter acts as a true note filter.
+   
 4. The current tick count is incremented by 1.
 5. The current state `S` is set to the next state `NS` computed earlier.
-
-
 
 Users can define the following expressions.
 
@@ -105,10 +103,32 @@ State
 
 Sync could be set to 1/8.
 
+### Randomly shift an incoming chord
+
+Gate
+: `true`; always produce output
+
+Note
+: `N[i]+NS`; output each note in the chord applying the current shift.
+
+Velocity
+: `V[i]`; keep velocity
+
+Length
+: `0`; notes stay on as long as the key is pressed (i.e. wait for the note off).
+
+Delay
+: `0`; no delay.
+
+State
+: `5*(r()%3)`; assign random 5-semitone shift to state (which stays constant for all notes in current chord)
+
+Sync should be set to 'in'.
+
 ### Arpeggiator (Up)
 
 Gate
-: `i==0`; produce output on every tick, *once* for the chord.
+: `(L > 0) and (i==0)`; produce output on every tick, *once* for the chord (if there is a chord at all). Note that the condition L>0 is required, because in synced mode the gate expression is evaluated at least once, even if no chord is present, and if true, the note expression is evaluated, which would fail if there is no chord present. 
 
 Note
 : `N[t % L]`; output each note in the chord one by one each tick
