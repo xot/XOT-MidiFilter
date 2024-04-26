@@ -83,6 +83,8 @@ When 'Through' equals 'On', all incoming MIDI events are passed through. When 'O
 
 ### Repeat chord with increasing velocity
 
+Set Sync to 1/4, 1/8 or 1/16.
+
 Gate
 : `true`; produce output on every tick for every note in the chord.
 
@@ -101,18 +103,19 @@ Delay
 State
 : `0`; not used.
 
-Sync could be set to 1/8.
 
 ### Randomly shift an incoming chord
+
+Sync should be set to 'in'. 
 
 Gate
 : `true`; always produce output
 
 Note
-: `N[i]+NS`; output each note in the chord applying the current shift.
+: `N[0]+NS`; output the note applying the current shift. 
 
 Velocity
-: `V[i]`; keep velocity
+: `V[0]`; keep velocity
 
 Length
 : `0`; notes stay on as long as the key is pressed (i.e. wait for the note off).
@@ -123,9 +126,11 @@ Delay
 State
 : `5*(r()%3)`; assign random 5-semitone shift to state (which stays constant for all notes in current chord)
 
-Sync should be set to 'in'.
+Note that when SYnc equals 'in' notes are treated one by one as the come in - so XOT-MidiFilter does not 'see' a chord as it would when synced to the transport. This is why we use N[0] (the incoming note) in the note expression, and we use the state to record the current shift (because when sync equals 'in' the state is only updated with the first note on message after a note off, i.e. when the first note of a new chord comes in when the previous chord was released).
 
 ### Arpeggiator (Up)
+
+Set Sync to 1/4, 1/8 or 1/16.
 
 Gate
 : `(L > 0) and (i==0)`; produce output on every tick, *once* for the chord (if there is a chord at all). Note that the condition L>0 is required, because in synced mode the gate expression is evaluated at least once, even if no chord is present, and if true, the note expression is evaluated, which would fail if there is no chord present. 
@@ -145,9 +150,9 @@ Delay
 State
 : `0`; not used.
 
-Sync could be set to 1/8.
-
 ### A Euclidean rhythm generator
+
+Set Sync to 1/4, 1/8 or 1/16.
 
 Gate
 : `e(5,3,0,t)`; 3 pulses in 5 slots; observe how `t` is used to loop over the slots in succession, opening the gate and producing output for all t for which `e(5,3,0,t)` equals true. We could also have written `e(5,3,0,t%5)`
@@ -166,8 +171,6 @@ Delay
 
 State
 : `0`; not used.
-
-Sync could be set to 1/8.
 
 ## Note
 
