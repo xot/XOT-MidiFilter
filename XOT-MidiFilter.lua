@@ -1,5 +1,11 @@
+-- one input for incoming notes or ticks
 this.inlets = 1
-this.outlets = 4 -- note on, delay on, note off, delay off
+-- four outputs
+--   0: (note, velocity > 0): note on
+--   1: ms to delay this note on
+--   2: (note, 0): note off
+--   3: ms to delay note off
+this.outlets = 4
 
 -- state
 
@@ -7,7 +13,7 @@ S = 0 -- current state
 NS = 0 -- next state
 t = 0 -- tick count
 i = 0 -- note index
-L = 0 -- no. of note in current chord
+L = 0 -- no. of notes in current chord
 N = {} -- current chord notes (0..l-1)
 N[0] = 0
 V = {} -- current chord velocities (0..l-1)
@@ -77,7 +83,8 @@ end
 
 -- auxiliary
 
-function b(v) -- convert bool to 0,1
+-- convert bool to 0,1
+function b(v) 
    if v then
       return 1
    else
@@ -92,17 +99,21 @@ function e(n,p,r,i)
     return (((p * (i + r + 1)) % n) + p) >= n
 end
 
+-- return a random value between 0 and 100 (inclusive).
 function r()
     return math.random(0,100)
 end
 
+-- integer divide n by d
 function div(n,d)
     return math.floor(n/d)
 end
 
 -- process incoming messages
 
--- MIDI note on/off
+-- incoming MIDI note on/off when Sync ~= in
+--   insert incoming note at (or remove it from) the rigth position in
+--   the chord maintained by N[], V[] and L.
 function list(note,velocity)
     k = 0
     while (k < L) and (N[k] < note) do
@@ -128,9 +139,13 @@ end
 offmap = {} -- record which note off to send for a note on
 delaymap = {} -- record which delay to send for a note on
 
+-- process a tick or notetick to create output
 function dotick()
-    for j=0, math.max(0,L-1) do -- do it at least once, even if chord is empty
+    -- process tick for all notes in the currently stored chord
+    -- (and do it once if no notes stored at all)
+    for j=0, math.max(0,L-1) do 
         i = j
+	-- produce output only when gate function evaluates to true
         if gf() then 
             note = math.floor(nf())
             velocity = math.floor(vf())
@@ -138,6 +153,8 @@ function dotick()
             delay = math.floor(df())
             outlet(0,note,velocity)
             outlet(1,delay)
+	    -- if length == 0, sustain note until note off received
+	    -- (this is handled by notetick)
             if length > 0 then
                 outlet(2,note,0)
                 outlet(3,length+delay)
@@ -152,6 +169,8 @@ function dotick()
     t = t+1
 end
 
+-- incoming tick when Sync ~= in
+-- (incoming notes are processed using list()
 function tick()
     NS = sf()
     dotick()
@@ -160,6 +179,9 @@ end
 
 lastvelocitywaszero = true
 
+-- incoming tick with MIDI note on/off (when Sync == in)
+--   if note on, process it using the functions to create output
+--   if note off, turn off previously created note
 function notetick(n,v)
     if v ~= 0 then
         if lastvelocitywaszero then

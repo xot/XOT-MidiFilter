@@ -6,34 +6,35 @@ Max for Live MIDI Filter effect.
 
 Released under the [MIT](https://opensource.org/licenses/MIT) license. 
 
+## Summary
+
+XOT-MidiFilter uses user supplied expressions to transform incoming MIDI notes, or to generate MIDI notes when triggered by an external clock. 
+
+It can be used to shift notes, adjust note velocities, delay notes, create rhythmic patterns, process incoming chords as an arpeggiator, and much much more. The use of complex LUA expressions allow these things to depend on the current state, on random events, and the value of three dials.
+
 ## Description
 
 ![Screenshot](Screenshot.png "Screenshot")
 
 
-XOT-MidiFilter uses user supplied expressions to transform incoming MIDI notes, or to generate MIDI notes when triggered by an external clock. 
-
-It can be used to shift notes, adjust note velocities, delay notes, create rhythmic patterns, process incoming chords as an arpeggiator, and much much more. The use of complex expressions allow these things to depend on the current state, on random events, and the value of three dials.
-
 XOT-MidiFilter is triggered to produce output with every clock tick. This tick is either derived from the running transport (when 'Sync' equals 1/4, 1/8 or 1/16) or triggered with each incoming note on (when 'Sync' equals 'in'). When 'Triplets' is on, the clock is synchronised on triples of the selected rate. 
 
+When setting 'Sync' to 'in', an incoming MIDI note-on message (i.e. with velocity > 0) is immediately processed. In the expressions generating the output (see below), `N[0]` equals the note, `V[0]` its velocity, and `L=1`. This setting allows the generation of rhythmic patterns with a grove driven by notes on a MIDI track. 
 
-When setting 'Sync' to 'in', an incoming note-ons (i.e. velocity > 0) is immediately processed. In the expressions generating the output (see below), `N[0]` equals the note, `V[0]` its velocity, and `L=1`. This setting allows the generation of rhythmic patterns with a grove driven by notes on a MIDI track. 
-
-When 'Sync' is equal to 1/4, 1/8 or 1/16 (i.e. when XOT-MidiFilter is synced to the transport), incoming notes are stored in a chord. A node is added with a note on message, and removed with a note off message. When a node is added, its velocity is also recorded. XOT-MidiFilter can use the current chord in the expressions that generate its output by referring to `N[i]` for the i-th note, `V[i]` for the velocity of the i-th note, for i between 0 and `L`-1 (i.e. `L` denotes the number of notes in the current chord). Notes in a chord are always stored in increasing note pitch, i.e. `N[i]` is guaranteed to be smaller than `N[j]` when `i` < `j`.
+When 'Sync' is equal to 1/4, 1/8 or 1/16 (i.e. when XOT-MidiFilter is synced to the transport), incoming notes are stored in a chord. A note is added with a note on message, and removed with a note off message. When a note is added, its velocity is also recorded. XOT-MidiFilter can use the currently stored chord in the expressions that generate its output by referring to `N[i]` for the i-th note, `V[i]` for the velocity of the i-th note, for i between 0 and `L`-1 (i.e. `L` denotes the number of notes in the current chord). Notes in a chord are always stored in increasing note pitch, i.e. `N[i]` is guaranteed to be smaller than `N[j]` when `i` < `j`.
 
 With every tick the following happens:
 
 1. All expressions are read from the input.
-2. The next state `NS` is computed using the state expression. (If 'Sync' is 'in' this only happens the first after a note off message was received; this allows chords to share a single state.)
+2. The next state `NS` is computed using the state expression. (If 'Sync' is 'in' this only happens with the first note on message after a note off message was received; this allows incrementally built chords in 'Sync=in' mode to share the same state when creating output.)
 3. A loop over all notes in the current chord is started, setting an index
    `i` through values `0` to `L`-1 one by one, and performing the following steps. If the current chord is empty (or when 'Sync' equals 'in'), the steps below are executed once, for `i` equals 0.
    
    - The gate expression is executed, and if it returns `false`, no output is produced. (Recall that `t` can be used in this expression for the current clock tick number, while `i` can be used to refer to the index of the current note in the current chord.)
    
-   - Otherwise, a note is output with pitch defined by the note expression, velocity defined by the velocity expression, length defined by the length expression and delayed as defined by the delay expression.
+   - Otherwise, a note on MIDI output message is created with pitch defined by the note expression, velocity defined by the velocity expression, length defined by the length expression and delayed as defined by the delay expression.
    
-   - If the length expression returns 0, then the corresponding note off message is used to turn the note off; this only works if 'Sync' equals 'in'. With this setting XOT-MidiFilter acts as a true note filter.
+   - If the length expression returns 0, then the corresponding note off message is used to turn the note off; this only works if 'Sync' equals 'in'. (If 'Sync' does not equal 'in', the note is on forever). With this setting XOT-MidiFilter acts as a true MIDI note filter.
    
 4. The current tick count is incremented by 1.
 5. The current state `S` is set to the next state `NS` computed earlier.
@@ -74,7 +75,7 @@ Moreover, the following helper functions are available.
 
 - `e(n,k,r,i)`: the euclid generatior for n slots, k pulses, with rotation r, returning whether the slot at index i has a pulse or not (boolean). (*Note: the [algorithm used](https://paulbatchelor.github.io/sndkit/euclid/) is a simplified one-line version of the original recursive algorithm, that produces the same pattern but with a fixed but seemingly random rotation; adjust the rotation to get the actual Euclidean pattern.*) 
 - `b(v)`: convert a boolean v to 0 (false) or 1 (true).
-- `r()`: return a uniform random value between 0..100.
+- `r()`: return a uniform random value between 0..100 (inclusive).
 - `div(n,d)`: the integer division of n by d.
 
 When 'Through' equals 'On', all incoming MIDI events are passed through. When 'Off', all are blocked and the output is only as generated by XOT-MidiFilter itself.
