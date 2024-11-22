@@ -1,10 +1,13 @@
 -- one input for incoming notes or ticks
+
 this.inlets = 1
+
 -- four outputs
 --   0: (note, velocity > 0): note on
 --   1: ms to delay this note on
 --   2: (note, 0): note off
 --   3: ms to delay note off
+
 this.outlets = 4
 
 -- state
@@ -14,9 +17,9 @@ NS = 0 -- next state
 t = 0 -- tick count
 i = 0 -- note index
 L = 0 -- no. of notes in current chord
-N = {} -- current chord notes (0..l-1)
+N = {} -- current chord notes (0..L-1)
 N[0] = 0
-V = {} -- current chord velocities (0..l-1)
+V = {} -- current chord velocities (0..L-1)
 
 function reset(v)
     L = 0
@@ -35,6 +38,9 @@ end
 p1 = 0
 p2 = 0
 p3 = 0
+p4 = 0
+p5 = 0
+p6 = 0
 
 function setp1(v)
     p1 = v
@@ -47,6 +53,19 @@ end
 function setp3(v)
     p3 = v
 end 
+
+function setp4(v)
+    p4 = v
+end 
+
+function setp5(v)
+    p5 = v
+end 
+
+function setp6(v)
+    p6 = v
+end 
+
 
 -- scripts
 
@@ -99,9 +118,9 @@ function e(n,p,r,i)
     return (((p * (i + r + 1)) % n) + p) >= n
 end
 
--- return a random value between 0 and 100 (inclusive).
+-- return a random value between 0 and 99 (inclusive).
 function r()
-    return math.random(0,100)
+    return math.random(0,99)
 end
 
 -- integer divide n by d
