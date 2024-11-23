@@ -4,9 +4,9 @@ this.inlets = 1
 
 -- four outputs
 --   0: (note, velocity > 0): note on
---   1: ms to delay this note on
+--   1: time to delay this note for (max time format)
 --   2: (note, 0): note off
---   3: ms to delay note off
+--   3: additional time to delete note off (max time format); used to encode note length
 
 this.outlets = 4
 
@@ -128,6 +128,12 @@ function div(n,d)
     return math.floor(n/d)
 end
 
+-- floor
+function floor(f)
+    return math.floor(f)
+end
+
+
 -- process incoming messages
 
 -- incoming MIDI note on/off when Sync ~= in
@@ -168,18 +174,18 @@ function dotick()
         if gf() then 
             note = math.floor(nf())
             velocity = math.floor(vf())
-            length = math.floor(lf())            
-            delay = math.floor(df())
-            outlet(0,note,velocity)
+            length = lf()            
+	    delay = df()
             outlet(1,delay)
+            outlet(0,note,velocity)
 	    -- if length == 0, sustain note until note off received
 	    -- (this is handled by notetick)
-            if length > 0 then
-                outlet(2,note,0)
-                outlet(3,length+delay)
-            else
+            if length == 0 then
                 offmap[N[j]] = note
                 delaymap[N[j]] = delay
+            else
+                outlet(3,length) -- delay note off with specified length
+                outlet(2,note,0)
             end
         else
             offmap[N[j]] = nil
@@ -217,8 +223,9 @@ function notetick(n,v)
     else
         lastvelocitywaszero = true
         if offmap[n] ~= nil then
-             outlet(2,offmap[n],0)
+	     outlet(1,0)
              outlet(3,delaymap[n])
+             outlet(2,offmap[n],0)
 	end
     end
 end
