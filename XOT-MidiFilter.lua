@@ -174,6 +174,8 @@ function dotick()
         if gf() then 
             note = math.floor(nf())
             velocity = math.floor(vf())
+	    velocity = math.min(velocity,127)
+	    velocity = math.max(0,velocity)	    
             length = lf()            
 	    delay = df()
             outlet(1,delay)
